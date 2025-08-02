@@ -1,5 +1,6 @@
 const { exec } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 module.exports = {
   async afterPublish(event) {
@@ -12,9 +13,26 @@ module.exports = {
       console.log('📁 脚本路径:', scriptPath);
       
       // 检查文件是否存在
-      const fs = require('fs');
       if (!fs.existsSync(scriptPath)) {
         console.error('❌ 脚本文件不存在:', scriptPath);
+        return;
+      }
+      
+      // 检查是否在Git仓库中
+      const gitCheck = await new Promise((resolve) => {
+        exec('git status', (error, stdout, stderr) => {
+          if (error) {
+            console.error('❌ 不在Git仓库中或Git未初始化:', error.message);
+            resolve(false);
+          } else {
+            console.log('✅ Git仓库状态正常');
+            resolve(true);
+          }
+        });
+      });
+      
+      if (!gitCheck) {
+        console.log('⚠️ 跳过Git操作，因为不在Git仓库中');
         return;
       }
       
@@ -26,21 +44,37 @@ module.exports = {
         
         console.log('✅ 自动导出成功:', stdout);
         
-        // 自动提交到 Git
-        const gitCommands = [
-          'git add scripts/generate-translations.js',
-          'git commit -m "自动更新翻译数据"',
-          'git push'
-        ];
-        
-        exec(gitCommands.join(' && '), (gitError, gitStdout, gitStderr) => {
-          if (gitError) {
-            console.error('❌ Git 提交失败:', gitError);
+        // 检查是否有文件变更
+        exec('git status --porcelain', (statusError, statusStdout, statusStderr) => {
+          if (statusError) {
+            console.error('❌ 检查Git状态失败:', statusError);
             return;
           }
           
-          console.log('✅ 自动提交到 Git 成功:', gitStdout);
-          console.log('🔄 GitHub Actions 将自动部署翻译文件');
+          if (!statusStdout.trim()) {
+            console.log('ℹ️ 没有文件变更，跳过Git提交');
+            return;
+          }
+          
+          console.log('📝 检测到文件变更，准备提交...');
+          
+          // 自动提交到 Git
+          const gitCommands = [
+            'git add scripts/generate-translations.js',
+            'git commit -m "自动更新翻译数据 - ' + new Date().toISOString() + '"',
+            'git push origin master'
+          ];
+          
+          exec(gitCommands.join(' && '), (gitError, gitStdout, gitStderr) => {
+            if (gitError) {
+              console.error('❌ Git 提交失败:', gitError);
+              console.error('Git stderr:', gitStderr);
+              return;
+            }
+            
+            console.log('✅ 自动提交到 Git 成功:', gitStdout);
+            console.log('🔄 GitHub Actions 将自动部署翻译文件');
+          });
         });
       });
     } catch (error) {
@@ -58,7 +92,6 @@ module.exports = {
       console.log('📁 脚本路径:', scriptPath);
       
       // 检查文件是否存在
-      const fs = require('fs');
       if (!fs.existsSync(scriptPath)) {
         console.error('❌ 脚本文件不存在:', scriptPath);
         return;
@@ -72,21 +105,37 @@ module.exports = {
         
         console.log('✅ 自动导出成功:', stdout);
         
-        // 自动提交到 Git
-        const gitCommands = [
-          'git add scripts/generate-translations.js',
-          'git commit -m "自动更新翻译数据（取消发布）"',
-          'git push'
-        ];
-        
-        exec(gitCommands.join(' && '), (gitError, gitStdout, gitStderr) => {
-          if (gitError) {
-            console.error('❌ Git 提交失败:', gitError);
+        // 检查是否有文件变更
+        exec('git status --porcelain', (statusError, statusStdout, statusStderr) => {
+          if (statusError) {
+            console.error('❌ 检查Git状态失败:', statusError);
             return;
           }
           
-          console.log('✅ 自动提交到 Git 成功:', gitStdout);
-          console.log('🔄 GitHub Actions 将自动部署翻译文件');
+          if (!statusStdout.trim()) {
+            console.log('ℹ️ 没有文件变更，跳过Git提交');
+            return;
+          }
+          
+          console.log('📝 检测到文件变更，准备提交...');
+          
+          // 自动提交到 Git
+          const gitCommands = [
+            'git add scripts/generate-translations.js',
+            'git commit -m "自动更新翻译数据（取消发布） - ' + new Date().toISOString() + '"',
+            'git push origin master'
+          ];
+          
+          exec(gitCommands.join(' && '), (gitError, gitStdout, gitStderr) => {
+            if (gitError) {
+              console.error('❌ Git 提交失败:', gitError);
+              console.error('Git stderr:', gitStderr);
+              return;
+            }
+            
+            console.log('✅ 自动提交到 Git 成功:', gitStdout);
+            console.log('🔄 GitHub Actions 将自动部署翻译文件');
+          });
         });
       });
     } catch (error) {
