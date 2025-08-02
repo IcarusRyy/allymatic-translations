@@ -3,7 +3,7 @@ const path = require('path');
 const axios = require('axios');
 const crypto = require('crypto');
 
-const STRAPI_URL = process.env.STRAPI_URL || 'http://localhost:1337';
+const STRAPI_URL = process.env.STRAPI_URL || 'http://127.0.0.1:1337';
 const API_TOKEN = process.env.STRAPI_API_TOKEN;
 
 // 确保输出目录存在
@@ -20,9 +20,9 @@ const generateTranslations = async () => {
     
     // 从 Strapi 获取翻译
     const response = await axios.get(`${STRAPI_URL}/api/translations`, {
-      headers: {
+      headers: API_TOKEN ? {
         'Authorization': `Bearer ${API_TOKEN}`,
-      },
+      } : {},
       params: {
         'pagination[pageSize]': 1000,
         'sort[0]': 'key:asc',
@@ -38,9 +38,9 @@ const generateTranslations = async () => {
     };
 
     translations.forEach(item => {
-      const { key, 'zh-CN': zhCN, 'en-US': enUS, category } = item.attributes;
-      if (zhCN) grouped['zh-CN'][key] = zhCN;
-      if (enUS) grouped['en-US'][key] = enUS;
+      const { key, zh_CN, en_US, category } = item;
+      if (zh_CN) grouped['zh-CN'][key] = zh_CN;
+      if (en_US) grouped['en-US'][key] = en_US;
     });
 
     // 创建输出目录
