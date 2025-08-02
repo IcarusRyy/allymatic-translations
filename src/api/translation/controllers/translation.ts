@@ -29,8 +29,8 @@ export default factories.createCoreController('api::translation.translation', ({
         } else if (language === 'en-US') {
           value = item.en_US || '';
         } else {
-          // 默认返回中文
-          value = item.zh_CN || '';
+          // 默认返回英文
+          value = item.en_US || '';
         }
         
         if (value) {
@@ -66,7 +66,7 @@ export default factories.createCoreController('api::translation.translation', ({
     } else if (language === 'en-US') {
       value = data.attributes.en_US || '';
     } else {
-      value = data.attributes.zh_CN || '';
+      value = data.attributes.en_US || '';
     }
     
     return {
