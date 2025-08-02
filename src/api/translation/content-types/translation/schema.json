@@ -12,12 +12,13 @@
   "pluginOptions": {},
   "attributes": {
     "key": {
+      "type": "string",
+      "unique": true
+    },
+    "zh_CN": {
       "type": "text"
     },
     "en_US": {
-      "type": "text"
-    },
-    "zh_CN": {
       "type": "text"
     }
   }

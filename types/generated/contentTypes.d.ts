@@ -425,7 +425,7 @@ export interface ApiTranslationTranslation extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     en_US: Schema.Attribute.Text;
-    key: Schema.Attribute.Text;
+    key: Schema.Attribute.String & Schema.Attribute.Unique;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',

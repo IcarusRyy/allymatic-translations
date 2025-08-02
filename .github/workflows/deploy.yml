@@ -1,5 +1,4 @@
-name: Deploy Strapi to GitHub Pages
-
+name: Deploy Translation Management System
 on:
   push:
     branches: [main]
@@ -7,35 +6,146 @@ on:
   schedule:
     - cron: '*/1 * * * *'  # 每分钟执行一次
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
-          
+          cache: 'npm'
+      
       - name: Install dependencies
-        run: npm install
-        
+        run: npm ci
+      
       - name: Build Strapi
         run: npm run build
         env:
           DATABASE_CLIENT: sqlite
           DATABASE_FILENAME: .tmp/data.db
+      
+      - name: Generate translations and management interface
+        run: |
+          # 创建输出目录
+          mkdir -p dist/translations/zh-CN
+          mkdir -p dist/translations/en-US
           
-      - name: Generate translation files
-        run: node scripts/generate-translations.js
-        env:
-          STRAPI_URL: ${{ secrets.STRAPI_URL }}
-          STRAPI_API_TOKEN: ${{ secrets.STRAPI_API_TOKEN }}
+          # 生成翻译文件
+          node scripts/generate-translations.js
           
+          # 创建管理界面
+          cat > dist/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="zh-CN">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Allymatic 翻译管理系统</title>
+              <style>
+                  body { font-family: Arial, sans-serif; margin: 40px; }
+                  .container { max-width: 800px; margin: 0 auto; }
+                  .header { text-align: center; margin-bottom: 30px; }
+                  .translation-item { margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+                  .key { font-weight: bold; color: #333; }
+                  .zh { color: #e74c3c; }
+                  .en { color: #3498db; }
+                  .status { text-align: center; padding: 20px; background: #f8f9fa; border-radius: 5px; margin: 20px 0; }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <div class="header">
+                      <h1>🌐 Allymatic 翻译管理系统</h1>
+                      <p>托管在 GitHub Pages 上的翻译管理系统</p>
+                  </div>
+                  
+                  <div class="status">
+                      <h3>📊 系统状态</h3>
+                      <p>✅ 翻译文件已生成并部署到 GitHub Pages</p>
+                      <p>🔄 每分钟自动更新</p>
+                      <p>📁 翻译文件位置：<a href="./translations/">./translations/</a></p>
+                  </div>
+                  
+                  <div class="translations">
+                      <h3>📝 当前翻译内容</h3>
+                      <div class="translation-item">
+                          <div class="key">allymatic-All-in-One TikTok Influencer Collaboration Management System</div>
+                          <div class="zh">中文：allymatic - 一站式 TikTok 网红合作管理系统</div>
+                          <div class="en">English：allymatic - All-in-One TikTok Influencer Collaboration Management System</div>
+                      </div>
+                      <div class="translation-item">
+                          <div class="key">login</div>
+                          <div class="zh">中文：登录</div>
+                          <div class="en">English：Login</div>
+                      </div>
+                      <div class="translation-item">
+                          <div class="key">signup</div>
+                          <div class="zh">中文：注册</div>
+                          <div class="en">English：Sign Up</div>
+                      </div>
+                      <div class="translation-item">
+                          <div class="key">dashboard</div>
+                          <div class="zh">中文：仪表板</div>
+                          <div class="en">English：Dashboard</div>
+                      </div>
+                      <div class="translation-item">
+                          <div class="key">creators</div>
+                          <div class="zh">中文：创作者</div>
+                          <div class="en">English：Creators</div>
+                      </div>
+                      <div class="translation-item">
+                          <div class="key">content</div>
+                          <div class="zh">中文：内容</div>
+                          <div class="en">English：Content</div>
+                      </div>
+                      <div class="translation-item">
+                          <div class="key">cooperation</div>
+                          <div class="zh">中文：合作</div>
+                          <div class="en">English：Cooperation</div>
+                      </div>
+                      <div class="translation-item">
+                          <div class="key">settings</div>
+                          <div class="zh">中文：设置</div>
+                          <div class="en">English：Settings</div>
+                      </div>
+                      <div class="translation-item">
+                          <div class="key">profile</div>
+                          <div class="zh">中文：个人资料</div>
+                          <div class="en">English：Profile</div>
+                      </div>
+                      <div class="translation-item">
+                          <div class="key">logout</div>
+                          <div class="zh">中文：退出登录</div>
+                          <div class="en">English：Logout</div>
+                      </div>
+                  </div>
+                  
+                  <div style="margin-top: 30px; text-align: center; color: #666;">
+                      <p>💡 要更新翻译，请修改 scripts/generate-translations.js 文件并推送到 GitHub</p>
+                      <p>🔄 系统会自动重新部署翻译文件</p>
+                  </div>
+              </div>
+          </body>
+          </html>
+          EOF
+          
+          echo "✅ 生成翻译文件和管理界面完成"
+      
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-          force_orphan: true 
+          force_orphan: true
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com' 
