@@ -8,20 +8,23 @@ export default factories.createCoreController('api::translation.translation', ({
   // 重写 find 方法来返回多语言格式
   async find(ctx) {
     try {
-      // 调用原始的 find 方法
-      const result = await strapi.entityService.findMany('api::translation.translation', {
-        populate: '*',
-        sort: { key: 'asc' }
-      });
-      
       // 获取查询参数中的语言
       const { language } = ctx.query;
+      
+      // 获取所有翻译数据，不设置分页限制
+      const result = await strapi.entityService.findMany('api::translation.translation', {
+        populate: '*',
+        sort: { key: 'asc' },
+        // 不设置分页，获取全部数据
+        pagination: false
+      });
       
       // 转换数据格式
       const translations: Record<string, string> = {};
       
       result.forEach((item: any) => {
-        const key = item.key || `translation_${item.id}`;
+        // 优先使用配置的 key，如果没有则使用英文文案作为 key
+        const key = item.key || item.en_US || `translation_${item.id}`;
         let value = '';
         
         if (language === 'zh-CN') {
