@@ -20,6 +20,21 @@ const generateTranslations = async () => {
     en_US: "aaa"
   },
   {
+    key: "null",
+    zh_CN: "测试发布1",
+    en_US: "testpublish1"
+  },
+  {
+    key: "null",
+    zh_CN: "发布2",
+    en_US: "testpublish2"
+  },
+  {
+    key: "pulish",
+    zh_CN: "发布",
+    en_US: "publish"
+  },
+  {
     key: "test_1",
     zh_CN: "测试1",
     en_US: "test1"
